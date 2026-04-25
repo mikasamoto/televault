@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeleVault — Storage Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #030308;
+  --sidebar-bg: rgba(10, 10, 22, 0.8);
+  --surf: rgba(13, 13, 30, 0.6);
+  --surf2: rgba(20, 20, 42, 0.4);
+  --border: rgba(123, 114, 255, 0.15);
+  --border2: rgba(123, 114, 255, 0.3);
+  --acc: #7b72ff;
+  --acc2: #9b94ff;
+  --text: #ffffff;
+  --text2: #8888aa;
+  --text3: #44445a;
+  --green: #4ade80;
+  --red: #ff5c5c;
+  --yellow: #fbbf24;
+  --r: 20px;
+  --trans: 0.3s cubic-bezier(.4, 0, .2, 1);
+  --sidebar-w: 280px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(circle at 0% 0%, rgba(123, 114, 255, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 100% 100%, rgba(34, 211, 238, 0.03) 0%, transparent 50%);
+  z-index: -1;
+}
+[data-theme="light"] {
+  --bg: #f5f5fa;
+  --sidebar-bg: #ffffff;
+  --surf: #ffffff;
+  --surf2: #f0f0f8;
+  --border: rgba(123, 114, 255, 0.08);
+  --text: #12121e;
+  --text2: #555570;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Instrument Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; overflow-x: hidden; }
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(24px);
+  border-right: 1px solid var(--border);
+  height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 20px;
+  z-index: 100;
+}
+.sidebar-logo { display: flex; align-items: center; gap: 12px; padding: 0 12px; margin-bottom: 48px; }
+.logo-icon { width: 32px; height: 32px; object-fit: contain; }
+.logo-text { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+
+.nav-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.nav-btn {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; border: none; background: transparent;
+  color: var(--text2); font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: all var(--trans);
+}
+.nav-btn:hover { background: var(--surf2); color: var(--text); }
+.nav-btn.active { 
+  background: linear-gradient(135deg, var(--acc), var(--acc2)); 
+  color: #fff; 
+  box-shadow: 0 8px 24px rgba(123, 114, 255, 0.3); 
+}
+.nav-btn svg { width: 18px; height: 18px; opacity: 0.7; }
+
+.sidebar-footer { margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
+.user-info { display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
+.user-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--acc); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px; cursor: pointer; position: relative; overflow: hidden; transition: all var(--trans); }
+.user-avatar:hover { transform: scale(1.05); filter: brightness(1.1); }
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-avatar::after { content: 'Edit'; position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 8px; opacity: 0; transition: opacity 0.2s; }
+.user-avatar:hover::after { opacity: 1; }
+.user-details { overflow: hidden; }
+.user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Main Content */
+.main { flex: 1; margin-left: var(--sidebar-w); padding: 40px 48px; max-width: 1200px; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+.page-title { font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; }
+
+/* Dashboard Components */
+.card { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; margin-bottom: 24px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px; }
+.stat-card { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.stat-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.stat-value { font-family: 'Bricolage Grotesque', sans-serif; font-size: 32px; font-weight: 800; }
+
+/* Lists & Rows */
+.items-list { display: grid; gap: 8px; }
+.item-row {
+  display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
+  background: var(--surf2); border: 1px solid var(--border); border-radius: 12px; transition: all var(--trans);
+}
+.item-row:hover { border-color: var(--acc); transform: translateX(4px); }
+.item-info { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; cursor: pointer; }
+.item-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(123, 114, 255, 0.1); display: flex; align-items: center; justify-content: center; color: var(--acc); }
+.item-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-meta { font-size: 11px; color: var(--text2); font-family: 'Geist Mono', monospace; }
+.item-actions { display: flex; gap: 8px; }
+
+/* Forms & Buttons */
+.fg { display: flex; flex-direction: column; gap: 8px; }
+label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+input { width: 100%; padding: 12px 16px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; }
+input:focus { border-color: var(--acc); }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all var(--trans); }
+.btn-primary { background: var(--acc); color: #fff; }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surf2); color: var(--text); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* Modals */
+.modal-bd { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-bd.on { display: flex; }
+.modal { background: var(--surf); border: 1px solid var(--border2); border-radius: 20px; padding: 32px; max-width: 440px; width: 100%; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+.toast-area { position: fixed; bottom: 32px; right: 32px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 12px; }
+.toast { background: var(--surf2); border: 1px solid var(--border2); padding: 14px 20px; border-radius: 10px; font-size: 13px; color: var(--text); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+.progress-wrap { background: var(--bg); border-radius: 10px; height: 6px; overflow: hidden; margin: 12px 0; }
+.progress-bar { height: 100%; background: var(--acc); width: 0%; transition: width 0.3s; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><img src="logo.png" class="logo-icon"><span class="logo-text">TeleVault</span></div>
+  <nav class="nav-group">
+    <button class="nav-btn active" data-page="bots" onclick="showPage('bots')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg> Bots</button>
+    <button class="nav-btn" data-page="channels" onclick="showPage('channels')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4.9 4.9A10 10 0 1 1 4.9 19M8.5 8.5A5 5 0 1 1 8.5 15.5"/></svg> Channels</button>
+    <button class="nav-btn" data-page="files" onclick="showPage('files')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Explorer</button>
+    <button class="nav-btn" data-page="users" onclick="showPage('users')" id="usersNavItem"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> User Access</button>
+    <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userInitials" onclick="document.getElementById('profileInput').click()">U</div>
+      <input type="file" id="profileInput" style="display:none" onchange="uploadProfileImage()" accept="image/*">
+      <div class="user-details"><div class="user-name" id="userEmail">Loading...</div><div class="user-role" id="userRole">User</div></div>
+    </div>
+    <button class="nav-btn" onclick="toggleTheme()"><svg id="themeIcon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"></svg> Theme</button>
+    <button class="nav-btn" onclick="logout()" style="color:var(--red)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div id="bots" class="page active">
+    <div class="top-bar"><h1 class="page-title">Bots</h1><div class="stat-card" style="padding:10px 20px; flex-direction:row; align-items:center"><span class="stat-label">Active:</span><span class="stat-value" id="botCount" style="font-size:20px; margin-left:10px">0</span></div></div>
+    <div class="card"><h2 style="font-size:14px; margin-bottom:16px">Add New Bot</h2><form onsubmit="addBot(event)" style="display:grid; grid-template-columns: 1fr 1fr auto; gap:12px; align-items:end"><div class="fg"><label>Name</label><input type="text" id="botName" required></div><div class="fg"><label>Token</label><input type="password" id="botToken" required></div><button class="btn btn-primary">Add Bot</button></form></div>
+    <div id="botsList" class="items-list"></div>
+  </div>
+
+  <div id="channels" class="page">
+    <div class="top-bar"><h1 class="page-title">Channels</h1><span class="stat-value" id="channelCount" style="color:var(--acc)">0</span></div>
+    <div class="card"><h2 style="font-size:14px; margin-bottom:16px">Add Channel</h2><form onsubmit="addChannel(event)" style="display:grid; grid-template-columns: 1fr 1fr auto; gap:12px; align-items:end"><div class="fg"><label>Name</label><input type="text" id="channelName" required></div><div class="fg"><label>ID</label><input type="text" id="channelId" required></div><button class="btn btn-primary">Add Channel</button></form></div>
+    <div id="channelsList" class="items-list"></div>
+  </div>
+
+  <div id="files" class="page">
+    <div class="top-bar"><h1 class="page-title">Explorer</h1><div style="display:flex; gap:12px"><button class="btn btn-primary" onclick="openQuickUploadModal()">Upload</button><button class="btn btn-ghost" onclick="loadFileTree()">Refresh</button></div></div>
+    <div class="stat-grid"><div class="stat-card"><span class="stat-label">Usage</span><span class="stat-value" id="totalSize">0 MB</span></div><div class="stat-card"><span class="stat-label">Files</span><span class="stat-value" id="filesCount">0</span></div></div>
+    <div class="card"><div style="display:flex; justify-content:space-between; margin-bottom:20px"><div id="breadcrumb" style="display:flex; gap:8px; font-size:13px"><span style="cursor:pointer" onclick="navigateToRoot()">Root</span></div><button class="btn btn-ghost" onclick="openNewFolderModal()">+ New Folder</button>    <!-- Your modal structure (see section 2) -->
+    </div><div id="fileTreeContainer" class="items-list"></div></div>
+  </div>
+
+  <div id="users" class="page">
+    <div class="top-bar"><h1 class="page-title">Users</h1><button class="btn btn-primary" onclick="openAddUserModal()">+ New User</button></div>
+    <div id="usersContainer" class="items-list"></div>
+  </div>
+
+  <div id="settings" class="page">
+    <div class="top-bar"><h1 class="page-title">Settings</h1></div>
+    <div class="card"><h2 style="font-size:14px; margin-bottom:20px">Security</h2><form onsubmit="handleUpdateSuperadminPassword(event)" style="display:grid; gap:16px"><div style="display:grid; grid-template-columns:1fr 1fr; gap:16px"><div class="fg"><label>Current Password</label><input type="password" id="oldPassword" required></div><div class="fg"><label>New Password</label><input type="password" id="newPassword" required></div></div><button class="btn btn-primary" style="width:fit-content">Update Admin Password</button></form></div>
+    <div class="card"><h2 style="font-size:14px; margin-bottom:16px">Maintenance</h2><div style="display:flex; gap:12px"><button class="btn btn-ghost" onclick="exportDatabase()">Backup DB</button><button class="btn btn-ghost" onclick="document.getElementById('dbImportFile').click()">Restore DB</button><input type="file" id="dbImportFile" style="display:none" onchange="importDatabase()" accept=".db"></div></div>
+  </div>
+</main>
+
+<!-- Modals -->
+<div class="modal-bd" id="editModal"><div class="modal"><h2 id="editModalTitle">Edit</h2><form onsubmit="saveEdit(event)" style="margin-top:20px"><div class="fg" style="margin-bottom:12px"><label>Name</label><input type="text" id="editName" required></div><div class="fg" style="margin-bottom:20px"><label id="editValueLabel">Token/ID</label><input type="password" id="editValue" required></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn btn-primary">Save</button><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button></div></form></div></div>
+<div class="modal-bd" id="editFolderModal"><div class="modal"><h2>Rename Folder</h2><form onsubmit="saveEditFolder(event)" style="margin-top:20px"><div class="fg" style="margin-bottom:20px"><label>Name</label><input type="text" id="editFolderName" required></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn btn-primary">Save</button><button type="button" class="btn btn-ghost" onclick="closeEditFolderModal()">Cancel</button></div></form></div></div>
+<div class="modal-bd" id="editFileModal"><div class="modal"><h2>Rename File</h2><form onsubmit="saveEditFile(event)" style="margin-top:20px"><div class="fg" style="margin-bottom:20px"><label>New Filename</label><div style="display:flex; align-items:center; gap:4px"><input type="text" id="editFileName" required style="flex:1"><span id="editFileExt" style="background:var(--surf2); padding:10px 14px; border-radius:10px; border:1.5px solid var(--border); font-family:'Geist Mono'; font-size:13px; color:var(--text2)">.ext</span></div></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn btn-primary">Save</button><button type="button" class="btn btn-ghost" onclick="closeEditFileModal()">Cancel</button></div></form></div></div>
+<div class="modal-bd" id="quickUploadModal"><div class="modal"><h2>Upload</h2><div style="border:2px dashed var(--border); padding:32px; text-align:center; cursor:pointer; margin:20px 0" onclick="document.getElementById('quickFileInput').click()"><input type="file" id="quickFileInput" style="display:none" onchange="onQuickFileSelected()"><p id="quickFileName">Select File</p></div><div id="quickUploadProgress" style="display:none"><div class="progress-wrap"><div id="quickUploadBar" class="progress-bar"></div></div></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn btn-primary" id="quickUploadBtn" onclick="quickUploadFile()">Start</button><button class="btn btn-ghost" onclick="closeQuickUploadModal()">Cancel</button></div></div></div>
+<div class="modal-bd" id="downloadProgressModal"><div class="modal"><h2>Downloading</h2><p id="downloadFileName" style="font-size:12px; margin:10px 0"></p><div class="progress-wrap"><div id="downloadBar" class="progress-bar"></div></div><p id="downloadStatus" style="font-size:11px; text-align:center">0%</p></div></div>
+<div class="modal-bd" id="newFolderModal"><div class="modal"><h2>New Folder</h2><form onsubmit="createFolder(event)" style="margin-top:20px"><div class="fg" style="margin-bottom:20px"><label>Name</label><input type="text" id="newFolderName" required></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn btn-primary">Create</button><button type="button" class="btn btn-ghost" onclick="closeNewFolderModal()">Cancel</button></div></form></div></div>
+<div class="modal-bd" id="addUserModal"><div class="modal"><h2>Add User</h2><form onsubmit="handleAddUser(event)" style="margin-top:20px"><div class="fg" style="margin-bottom:12px"><label>Email</label><input type="email" id="newUserEmail" required></div><div class="fg" style="margin-bottom:12px"><label>Password</label><input type="password" id="newUserPassword" required></div><div style="margin-bottom:20px"><label style="display:flex; align-items:center; gap:8px"><input type="checkbox" id="newUserIsAdmin"> Admin</label></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn btn-primary">Add</button><button type="button" class="btn btn-ghost" onclick="closeAddUserModal()">Cancel</button></div></form></div></div>
+<div class="toast-area" id="toastArea"></div>
+
+<script>
+let bots=[], channels=[], currentFolderId='root', editType=null, editId=null;
+
+// --- AUTH & THEME ---
+function checkAuth(){ const t=localStorage.getItem('token'); if(!t) window.location.href='/login.html'; else validateToken(); }
+async function validateToken(){
+  try{
+    const r=await fetch('/api/validate-token',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}});
+    const d=await r.json();
+    if(!r.ok) logout();
+    if(d.profile_image) updateAvatarDisplay(d.profile_image);
+  }catch(e){ logout(); }
+}
+function logout(){ localStorage.clear(); window.location.href='/login.html'; }
+checkAuth();
+
+function updateAvatarDisplay(imgData){
+  const av = document.getElementById('userInitials');
+  if(imgData){
+    av.innerHTML = `<img src="${imgData}" alt="Profile">`;
+    localStorage.setItem('profile_image', imgData);
+  } else {
+    const e = localStorage.getItem('username')||'U';
+    av.textContent = e[0].toUpperCase();
+    av.innerHTML = e[0].toUpperCase();
+    localStorage.removeItem('profile_image');
+  }
+}
+
+async function uploadProfileImage(){
+  const f = document.getElementById('profileInput').files[0];
+  if(!f) return;
+  const fd = new FormData(); fd.append('image', f);
+  try {
+    toast('Uploading profile picture...', 'info');
+    const r = await fetch('/api/user/profile-image', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+      body: fd
+    });
+    const d = await r.json();
+    if(d.success) {
+      updateAvatarDisplay(d.profile_image);
+      toast('Profile updated!', 'success');
+    } else toast(d.error || 'Upload failed', 'error');
+  } catch(e) { toast('Error uploading image', 'error'); }
+}
+
+function openNewFolderModal() {
+  document.getElementById('newFolderModal').classList.add('on');
+}
+
+function closeNewFolderModal() {
+  document.getElementById('newFolderModal').classList.remove('on');
+}
+
+async function createFolder(e) {
+  e.preventDefault();
+  const name = document.getElementById('newFolderName').value.trim();
+  if(!name) return;
+  const r = await fetch('/api/folders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+    body: JSON.stringify({ name, parentId: currentFolderId === 'root' ? null : currentFolderId })
+  });
+  if(r.ok) {
+    toast('Folder created!', 'success');
+    closeNewFolderModal();
+    loadFileTree();
+    e.target.reset();
+  } else {
+    const d = await r.json();
+    toast(d.error || 'Failed to create folder', 'error');
+  }
+}
+
+function displayUserInfo(){
+  const e=localStorage.getItem('username')||'User'; document.getElementById('userEmail').textContent=e;
+  const a=localStorage.getItem('isAdmin')==='true'; document.getElementById('userRole').textContent=a?'Admin':'User';
+  updateAvatarDisplay(localStorage.getItem('profile_image'));
+  if(!a) document.getElementById('usersNavItem').style.display='none';
+}
+displayUserInfo();
+const moon='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>', sun='<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+function toggleTheme(){ const h=document.documentElement, n=h.getAttribute('data-theme')==='dark'?'light':'dark'; h.setAttribute('data-theme',n); document.getElementById('themeIcon').innerHTML=n==='dark'?moon:sun; localStorage.setItem('theme',n); }
+(()=>{const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);document.getElementById('themeIcon').innerHTML=t==='dark'?moon:sun;})();
+
+// --- PAGE NAVIGATION ---
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  document.querySelector(`[data-page="${name}"]`).classList.add('active');
+  if(name==='files') loadFileTree();
+  if(name==='bots') loadBots();
+  if(name==='channels') loadChannels();
+  if(name==='users') loadUsers();
+}
+
+// --- UTILS ---
+function toast(msg,type='info'){ const t=document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg; document.getElementById('toastArea').appendChild(t); setTimeout(()=>t.remove(),3000); }
+function formatBytes(b){ if(b===0) return '0 B'; const k=1024, s=['B','KB','MB','GB','TB'], i=Math.floor(Math.log(b)/Math.log(k)); return parseFloat((b/Math.pow(k,i)).toFixed(2))+' '+s[i]; }
+async function* readSSE(r){
+  const reader=r.body.getReader(), dec=new TextDecoder(); let buf='';
+  while(true){
+    const {done,value}=await reader.read(); if(done) break;
+    buf+=dec.decode(value,{stream:true}); const lines=buf.split('\n'); buf=lines.pop();
+    for(const l of lines){ if(l.trim().startsWith('data:')){ try{ yield JSON.parse(l.trim().substring(5).trim()); }catch(e){} } }
+  }
+}
+
+// --- BOTS & CHANNELS EDIT ---
+function openEdit(type,id){
+  editType=type; editId=id;
+  if(type==='bot'){ const b=bots.find(x=>x.token===id); document.getElementById('editModalTitle').textContent='Edit Bot'; document.getElementById('editName').value=b.name; document.getElementById('editValue').value=b.token; document.getElementById('editValueLabel').textContent='Token'; }
+  else{ const c=channels.find(x=>String(x.id)===id); document.getElementById('editModalTitle').textContent='Edit Channel'; document.getElementById('editName').value=c.name; document.getElementById('editValue').value=c.id; document.getElementById('editValueLabel').textContent='ID'; }
+  document.getElementById('editModal').classList.add('on');
+}
+function closeModal(){ document.getElementById('editModal').classList.remove('on'); }
+async function saveEdit(e){
+  e.preventDefault(); const name=document.getElementById('editName').value, val=document.getElementById('editValue').value;
+  const url=(editType==='bot'?'/api/bots/':'/api/channels/')+encodeURIComponent(editId), body=editType==='bot'?{name,token:val}:{name,id:val};
+  const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){ toast('Updated!','success'); closeModal(); editType==='bot'?loadBots():loadChannels(); }
+}
+
+// --- BOTS ---
+async function loadBots(){
+  const r=await fetch('/api/bots'); const d=await r.json(); bots=d.data||[];
+  document.getElementById('botCount').textContent=bots.length;
+  document.getElementById('botsList').innerHTML=bots.map(b=>`
+    <div class="item-row">
+      <div class="item-info">
+        <div class="item-icon">🤖</div>
+        <div><div class="item-name">${b.name}</div><div class="item-meta">${b.token.substring(0,25)}...</div></div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEdit('bot','${b.token}')">Edit</button>
+        <button class="btn btn-ghost btn-danger btn-sm" onclick="deleteBot('${b.token}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+async function addBot(e){ e.preventDefault(); const name=document.getElementById('botName').value, token=document.getElementById('botToken').value; await fetch('/api/bots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,token})}); loadBots(); e.target.reset(); }
+async function deleteBot(t){ if(confirm('Delete bot?')){ await fetch('/api/bots/'+encodeURIComponent(t),{method:'DELETE'}); loadBots(); } }
+
+// --- CHANNELS ---
+async function loadChannels(){
+  const r=await fetch('/api/channels'); const d=await r.json(); channels=d.data||[];
+  document.getElementById('channelCount').textContent=channels.length;
+  document.getElementById('channelsList').innerHTML=channels.map(c=>`
+    <div class="item-row">
+      <div class="item-info">
+        <div class="item-icon">📺</div>
+        <div><div class="item-name">${c.name}</div><div class="item-meta">${c.id}</div></div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEdit('channel','${c.id}')">Edit</button>
+        <button class="btn btn-ghost btn-danger btn-sm" onclick="deleteChannel('${c.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+async function addChannel(e){ e.preventDefault(); const name=document.getElementById('channelName').value, id=document.getElementById('channelId').value; await fetch('/api/channels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,id})}); loadChannels(); e.target.reset(); }
+async function deleteChannel(id){ if(confirm('Unlink channel?')){ await fetch('/api/channels/'+encodeURIComponent(id),{method:'DELETE'}); loadChannels(); } }
+
+// --- EXPLORER ---
+let pathStack = [{id:'root', name:'Root'}];
+async function loadFileTree(){
+  const r=await fetch('/api/folders/'+encodeURIComponent(currentFolderId)); const d=await r.json();
+  const stats=await(await fetch('/api/db/stats')).json(); document.getElementById('filesCount').textContent=stats.total_files; document.getElementById('totalSize').textContent=formatBytes(stats.total_size);
+  
+  // Render Breadcrumb
+  const bc=document.getElementById('breadcrumb');
+  bc.innerHTML = pathStack.map((p, i) => `
+    <span onclick="navigateToPath(${i})" style="cursor:pointer; color:${i===pathStack.length-1?'var(--text)':'var(--text2)'}; font-weight:${i===pathStack.length-1?'700':'400'}">${p.name}</span>
+  `).join(' <span style="opacity:0.3">/</span> ');
+
+  const folders=d.folders.map(f=>`
+    <div class="item-row">
+      <div class="item-info" onclick="openFolder('${f.id}','${f.name}')"><div class="item-icon">📁</div><div class="item-name">${f.name}</div></div>
+      <div class="item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEditFolder('${f.id}','${f.name}')">Rename</button>
+        <button class="btn btn-ghost btn-danger btn-sm" onclick="deleteFolder('${f.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+  const files=d.files.map(f=>`
+    <div class="item-row">
+      <div class="item-info" onclick="downloadFile('${f.id}','${f.filename}')">
+        <div class="item-icon">📄</div>
+        <div><div class="item-name">${f.filename}</div><div class="item-meta">${formatBytes(f.file_size)}</div></div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="downloadFile('${f.id}','${f.filename}')">Download</button>
+        <button class="btn btn-ghost btn-sm" onclick="openEditFile('${f.id}','${f.filename}')">Rename</button>
+        <button class="btn btn-ghost btn-danger btn-sm" onclick="deleteFile('${f.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('fileTreeContainer').innerHTML=(folders+files)||'<div style="text-align:center; padding:60px; color:var(--text3); font-style:italic">No items in this directory</div>';
+}
+function openFolder(id,name){ 
+  currentFolderId=id; 
+  pathStack.push({id, name});
+  loadFileTree(); 
+}
+function navigateToPath(index){
+  pathStack = pathStack.slice(0, index + 1);
+  currentFolderId = pathStack[index].id;
+  loadFileTree();
+}
+function navigateToRoot(){ pathStack = [{id:'root', name:'Root'}]; currentFolderId='root'; loadFileTree(); }
+
+// --- FOLDER & FILE RENAME ---
+let currentFileExt = '';
+function openEditFolder(id,name){ editId=id; document.getElementById('editFolderName').value=name; document.getElementById('editFolderModal').classList.add('on'); }
+function closeEditFolderModal(){ document.getElementById('editFolderModal').classList.remove('on'); }
+async function saveEditFolder(e){ e.preventDefault(); const name=document.getElementById('editFolderName').value; await fetch('/api/folders/'+encodeURIComponent(editId),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})}); closeEditFolderModal(); loadFileTree(); }
+
+function openEditFile(id,name){
+  editId=id;
+  const lastDot = name.lastIndexOf('.');
+  if(lastDot > 0) {
+    document.getElementById('editFileName').value = name.substring(0, lastDot);
+    currentFileExt = name.substring(lastDot);
+    document.getElementById('editFileExt').textContent = currentFileExt;
+    document.getElementById('editFileExt').style.display = 'block';
+  } else {
+    document.getElementById('editFileName').value = name;
+    currentFileExt = '';
+    document.getElementById('editFileExt').style.display = 'none';
+  }
+  document.getElementById('editFileModal').classList.add('on');
+}
+function closeEditFileModal(){ document.getElementById('editFileModal').classList.remove('on'); }
+async function saveEditFile(e){
+  e.preventDefault();
+  const baseName = document.getElementById('editFileName').value.trim();
+  const filename = baseName + currentFileExt;
+  await fetch('/api/files/'+encodeURIComponent(editId),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename})});
+  closeEditFileModal(); loadFileTree();
+}
+
+async function deleteFolder(id){ if(confirm('Delete folder?')){ await fetch('/api/folders/'+encodeURIComponent(id),{method:'DELETE'}); loadFileTree(); } }
+async function deleteFile(id){ if(confirm('Delete file?')){ await fetch('/api/files/'+encodeURIComponent(id),{method:'DELETE'}); loadFileTree(); } }
+
+// --- UPLOAD ---
+function openQuickUploadModal(){ document.getElementById('quickUploadModal').classList.add('on'); }
+function closeQuickUploadModal(){ document.getElementById('quickUploadModal').classList.remove('on'); }
+function onQuickFileSelected(){ const f=document.getElementById('quickFileInput').files[0]; if(f) document.getElementById('quickFileName').textContent=f.name; }
+async function quickUploadFile(){
+  const f=document.getElementById('quickFileInput').files[0]; if(!f) return;
+  const fd=new FormData(); fd.append('file',f); document.getElementById('quickUploadProgress').style.display='block';
+  const url='/upload'+(currentFolderId==='root'?'':'?folder_id='+currentFolderId);
+  const r=await fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('token')},body:fd});
+  for await(const ev of readSSE(r)){
+    if(ev.type==='upload_progress'){ document.getElementById('quickUploadBar').style.width=ev.percentage+'%'; }
+    if(ev.type==='upload_complete'){ toast('Done!','success'); closeQuickUploadModal(); loadFileTree(); }
+  }
+}
+
+// --- DOWNLOAD ---
+async function downloadFile(id, name){
+  document.getElementById('downloadProgressModal').classList.add('on'); document.getElementById('downloadFileName').textContent=name;
+  const r=await fetch('/download/'+encodeURIComponent(id),{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}});
+  for await(const ev of readSSE(r)){
+    if(ev.type==='download_progress'){ document.getElementById('downloadBar').style.width=ev.percentage+'%'; document.getElementById('downloadStatus').textContent=ev.percentage+'%'; }
+    if(ev.type==='download_data'){
+      const b=await (await fetch('data:application/octet-stream;base64,'+ev.data)).blob();
+      const u=URL.createObjectURL(b), a=document.createElement('a'); a.href=u; a.download=name; a.click();
+      document.getElementById('downloadProgressModal').classList.remove('on');
+    }
+  }
+}
+
+// --- USERS ---
+async function loadUsers(){
+  const r=await fetch('/api/users',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}}); const d=await r.json();
+  document.getElementById('usersContainer').innerHTML=d.users.map(u=>`<div class="item-row"><div class="item-info"><div class="item-icon">👤</div><div><div class="item-name">${u.email}</div><div class="item-meta">${u.is_admin?'Admin':'User'}</div></div></div><button class="btn btn-ghost btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button></div>`).join('');
+}
+function openAddUserModal(){ document.getElementById('addUserModal').classList.add('on'); }
+function closeAddUserModal(){ document.getElementById('addUserModal').classList.remove('on'); }
+async function handleAddUser(e){ e.preventDefault(); const email=document.getElementById('newUserEmail').value, password=document.getElementById('newUserPassword').value, isAdmin=document.getElementById('newUserIsAdmin').checked; await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({email,password,isAdmin})}); closeAddUserModal(); loadUsers(); }
+
+// --- SETTINGS (Corrected Password Logic) ---
+async function handleUpdateSuperadminPassword(e){
+  e.preventDefault();
+  const oldPassword=document.getElementById('oldPassword').value, newPassword=document.getElementById('newPassword').value;
+  const r=await fetch('/api/settings/update-superadmin-password',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({oldPassword,newPassword})});
+  if(r.ok){ toast('Password updated!','success'); e.target.reset(); } else { const d=await r.json(); toast(d.error||'Update failed','error'); }
+}
+function exportDatabase(){ window.location.href='/api/db/export?token='+localStorage.getItem('token'); }
+
+// Initial
+loadBots(); loadChannels();
+</script>
+</body>
+</html>
